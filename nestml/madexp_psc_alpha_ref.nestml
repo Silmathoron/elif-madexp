@@ -1,5 +1,5 @@
 """
-Name: madexp_psc_alpha - Energy-based leaky integrate-and-fire neuron.
+Name: madexp_psc_alpha_ref - Energy-based leaky integrate-and-fire neuron.
 
 Description:
 The dynamics are given by:
@@ -23,7 +23,7 @@ FirstVersion: 2019
 Author: Tanguy Fardet
 """
 
-neuron madexp_psc_alpha:
+neuron madexp_psc_alpha_ref:
 
   state:
     r integer # number of steps in the current refractory phase
