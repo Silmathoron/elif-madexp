@@ -1,5 +1,5 @@
 """
-Name: madexp_psc_alpha_fast - Energy-based leaky integrate-and-fire neuron.
+Name: madexp_psc_alpha - Energy-based leaky integrate-and-fire neuron.
 
 Description:
 The dynamics are given by:
@@ -23,7 +23,7 @@ FirstVersion: 2019
 Author: Tanguy Fardet
 """
 
-neuron madexp_psc_alpha_fast:
+neuron madexp_psc_alpha:
 
   state:
     r integer # number of steps in the current refractory phase
@@ -33,6 +33,38 @@ neuron madexp_psc_alpha_fast:
     epsilon real = alpha*epsilon_0                        # Energy
     V_m   mV = E_0 + (E_u - E_0)*(1 - epsilon/epsilon_0)  # Membrane potential
     w     pA = 0*pA                               # Adaptation current
+  end
+
+  function I_spike(epsilon real, V_m mV) pA:
+    Ispk pA = 0. pA
+    arg_exp real = 0.
+
+    if Delta_T > 0. mV:
+      arg_exp = clip((V_m - V_th) / Delta_T, -20., 20.)
+      Ispk = (epsilon-epsilon_c)*g_L*Delta_T*exp(arg_exp)/epsilon_0
+    end
+
+    return Ispk
+  end
+
+  equations:
+    function eps_bound real = max(epsilon, 0.)  # non-negative energy
+    function V_bound mV = min(V_m, V_peak)  # prevent exponential divergence
+
+    # synapses: alpha functions
+    shape I_syn_in = (e/tau_syn_in) * t * exp(-t/tau_syn_in)
+    shape I_syn_ex = (e/tau_syn_ex) * t * exp(-t/tau_syn_ex)
+
+    function E_L mV = E_0 + (E_u - E_0)*(1 - eps_bound/epsilon_0)
+
+    function I_in pA = convolve(I_syn_in, spikesInh)
+    function I_ex pA = convolve(I_syn_ex, spikesExc)
+
+    function Ispike pA = I_spike(eps_bound, V_bound)
+
+    V_m' = (g_L*(E_L - V_bound) + Ispike - w + I_e + I_in + I_ex + currents) / C_m
+    w'   = (a*(V_bound-E_L) - w + I_KATP*epsilon_c/(2*eps_bound + epsilon_c)) / tau_w
+    epsilon' = ((1-eps_bound/(alpha*epsilon_0))**3 - (V_bound-E_f)/(E_d-E_f) - w/gamma) / tau_e
   end
 
   parameters:
@@ -64,47 +96,6 @@ neuron madexp_psc_alpha_fast:
 
   internals:
     RefractoryCounts integer = steps(t_ref) # refractory time in steps
-    invae real = 1./(alpha*epsilon_0)
-    inveps real = 1./epsilon_0
-    invEdEf 1/mV = 1./(E_d-E_f)
-    invte 1/ms = 1./tau_e
-    invCm 1/pF = 1./C_m
-    invDT 1/mV = 1./Delta_T
-    invtw 1/ms = 1./tau_w
-    invgamma 1/pA = 1./gamma
-  end
-
-  function I_spike(epsilon real, V_m mV) pA:
-    Ispk pA = 0. pA
-    arg_exp real = 0.
-
-    if Delta_T > 0. mV:
-      arg_exp = clip((V_m - V_th) * invDT, -20., 20.)
-      Ispk = (epsilon-epsilon_c)*g_L*Delta_T*exp(arg_exp) * inveps
-    end
-
-    return Ispk
-  end
-
-  equations:
-    function eps_bound real = max(epsilon, 0.)  # non-negative energy
-    function V_bound mV = min(V_m, V_peak)  # prevent exponential divergence
-
-    # synapses: alpha functions
-    shape I_syn_in = (e/tau_syn_in) * t * exp(-t/tau_syn_in)
-    shape I_syn_ex = (e/tau_syn_ex) * t * exp(-t/tau_syn_ex)
-
-    function E_L mV = E_0 + (E_u - E_0)*(1 - eps_bound*inveps)
-
-    function I_in pA = convolve(I_syn_in, spikesInh)
-    function I_ex pA = convolve(I_syn_ex, spikesExc)
-
-    function Ispike pA = I_spike(eps_bound, V_bound)
-
-    V_m' = (g_L*(E_L - V_bound) + Ispike - w + I_e + I_in + I_ex + currents) * invCm
-    w'   = (a*(V_bound-E_L) - w + I_KATP*epsilon_c/(2*eps_bound + epsilon_c)) * invtw
-
-    epsilon' = ((1 - eps_bound*invae)*(1 - eps_bound*invae)*(1 - eps_bound*invae) - (V_bound-E_f)*invEdEf - w * invgamma) * invte
   end
 
   input:
