@@ -18,7 +18,7 @@ Just install the BRIAN simulator via pip:
 ### NEST
 
 * Install NEST (see [here](https://nest-simulator.readthedocs.io/en/stable/installation/index.html))
-* Install NESTML (see [here](https://github.com/nest/nestml#installing-nestml))
+* Install NESTML using ``pip install nestml==3.1`` (this code will *not* work with later versions of NESTML)
 * Then run ``python nestml/nestml_install.py`` to install the models
 
 ### NEURON

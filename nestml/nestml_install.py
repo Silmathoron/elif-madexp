@@ -12,7 +12,7 @@ target = root + "/build"
 # build
 
 to_nest(logging_level='ERROR', input_path=root, target_path=target,
-        module_name="energy_module", dev=True)
+        module_name="energy_module")
 
 # install
 
