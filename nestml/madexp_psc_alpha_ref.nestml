@@ -26,13 +26,10 @@ Author: Tanguy Fardet
 neuron madexp_psc_alpha_ref:
 
   state:
-    r integer # number of steps in the current refractory phase
-  end
-
-  initial_values:
-    epsilon real = alpha*epsilon_0                        # Energy
-    V_m   mV = E_0 + (E_u - E_0)*(1 - epsilon/epsilon_0)  # Membrane potential
-    w     pA = 0*pA                               # Adaptation current
+    r integer    = 0                                          # number of steps for refractory phase
+    epsilon real = alpha*epsilon_0                            # Energy
+    V_m   mV     = E_0 + (E_u - E_0)*(1 - epsilon/epsilon_0)  # Membrane potential
+    w     pA     = 0*pA                                       # Adaptation current
   end
 
   function I_spike(epsilon real, V_m mV) pA:
@@ -41,30 +38,31 @@ neuron madexp_psc_alpha_ref:
 
     if Delta_T > 0. mV:
       arg_exp = clip((V_m - V_th) / Delta_T, -20., 20.)
-      Ispk = (epsilon-epsilon_c)*g_L*Delta_T*exp(arg_exp)/epsilon_0
+      Ispk = (epsilon-epsilon_c)*g_L*Delta_T*exp(arg_exp) / epsilon_0
     end
 
     return Ispk
   end
 
   equations:
-    function eps_bound real = max(epsilon, 0.)  # non-negative energy
-    function V_bound mV = min(V_m, V_peak)  # prevent exponential divergence
+    inline eps_bound real = max(epsilon, 0.)  # non-negative energy
+    inline V_bound mV = min(V_m, V_peak)  # prevent exponential divergence
 
     # synapses: alpha functions
-    shape I_syn_in = (e/tau_syn_in) * t * exp(-t/tau_syn_in)
-    shape I_syn_ex = (e/tau_syn_ex) * t * exp(-t/tau_syn_ex)
+    kernel I_syn_in = (e/tau_syn_in) * t * exp(-t/tau_syn_in)
+    kernel I_syn_ex = (e/tau_syn_ex) * t * exp(-t/tau_syn_ex)
 
-    function E_L mV = E_0 + (E_u - E_0)*(1 - eps_bound/epsilon_0)
+    inline E_L mV = E_0 + (E_u - E_0)*(1 - eps_bound / epsilon_0)
 
-    function I_in pA = convolve(I_syn_in, spikesInh)
-    function I_ex pA = convolve(I_syn_ex, spikesExc)
+    inline I_in pA = convolve(I_syn_in, spikesInh)
+    inline I_ex pA = convolve(I_syn_ex, spikesExc)
 
-    function Ispike pA = I_spike(eps_bound, V_bound)
+    inline Ispike pA = I_spike(eps_bound, V_bound)
 
     V_m' = (g_L*(E_L - V_bound) + Ispike - w + I_e + I_in + I_ex + currents) / C_m
-    w'   = (a*(V_bound-E_L) - w + I_KATP*epsilon_c/(2*eps_bound + epsilon_c)) / tau_w
-    epsilon' = ((1-eps_bound/(alpha*epsilon_0))**3 - (V_bound-E_f)/(E_d-E_f) - w/gamma) / tau_e
+    w'   = (a*(V_bound-E_L) - w + I_KATP*epsilon_c/(eps_bound + epsilon_c)) / tau_w
+
+    epsilon' = ((1 - eps_bound / (alpha*epsilon_0))*(1 - eps_bound / (alpha*epsilon_0))*(1 - eps_bound / (alpha*epsilon_0)) - (V_bound-E_f)/(E_d-E_f) - w / gamma) / tau_e
   end
 
   parameters:
@@ -76,8 +74,8 @@ neuron madexp_psc_alpha_ref:
     E_u mV = -58. mV           # upper potential
     E_d mV = -50. mV           # energy depletion potential
     E_f mV = -60. mV           # energy inflexion potential
-    epsilon_0 real = 0.5           # standard resting energy level
-    epsilon_c real = 0.2           # energy threshold for spike generation
+    epsilon_0 real = 0.5       # standard resting energy level
+    epsilon_c real = 0.2       # energy threshold for spike generation
     alpha real = 1.            # energetic health
     delta real = 0.1           # energy consumption per spike
     tau_e ms = 1000. ms        # time constant for energy production
@@ -101,7 +99,7 @@ neuron madexp_psc_alpha_ref:
   input:
     spikesInh pA <- inhibitory spike
     spikesExc pA <- excitatory spike
-    currents pA <- current
+    currents pA <- continuous
   end
 
   output: spike
@@ -117,10 +115,11 @@ neuron madexp_psc_alpha_ref:
     if r > 0: # is refractory?
       r -= 1
       V_m  = V_reset
-    elif V_m >= V_peak:
+    elif V_m >= V_peak and epsilon > epsilon_c:
+      # this test is necessary to support Delta_T = 0
       V_m  = V_reset
       epsilon -= delta
-      w   += b
+      w += b
       emit_spike()
       r = RefractoryCounts
     end

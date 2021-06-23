@@ -49,7 +49,15 @@ Istart    = 0.
 mm = nest.Create("multimeter", params={"record_from": ['V_m', 'w', 'epsilon'], "interval": 0.1, "start": starttime})
 nest.Connect(mm, n)
 
-sd = nest.Create("spike_detector")
+try:
+    # NEST 3
+    nest.NodeCollection()
+    spike_rec = "spike_recorder"
+except:
+    # NEST 2
+    spike_rec = "spike_detector"
+
+sd = nest.Create(spike_rec)
 nest.Connect(n, sd)
 
 nest.Simulate(starttime)

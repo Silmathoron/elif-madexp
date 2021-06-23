@@ -27,12 +27,8 @@ Author: Tanguy Fardet
 neuron elif_psc_alpha_fast:
 
   state:
-    r integer # number of steps in the current refractory phase
-    eprod real
-  end
-
-  initial_values:
-    V_m mV   = E_0          # Membrane potential
+    r integer    = 0                # number of steps for refractory phase
+    V_m mV       = E_0              # Membrane potential
     epsilon real = alpha*epsilon_0  # Energy
   end
 
@@ -66,15 +62,15 @@ neuron elif_psc_alpha_fast:
   end
 
   equations:
-    function eps_bound real = max(epsilon, 0.)  # non-negative energy
+    inline eps_bound real = max(epsilon, 0.)  # non-negative energy
     # synapses: alpha functions
-    shape I_syn_in = (e/tau_syn_in) * t * exp(-t/tau_syn_in)
-    shape I_syn_ex = (e/tau_syn_ex) * t * exp(-t/tau_syn_ex)
+    kernel I_syn_in = (e/tau_syn_in) * t * exp(-t/tau_syn_in)
+    kernel I_syn_ex = (e/tau_syn_ex) * t * exp(-t/tau_syn_ex)
 
-    function E_L mV = E_0 + (E_u - E_0)*(1 - eps_bound*inveps)
+    inline E_L mV = E_0 + (E_u - E_0)*(1 - eps_bound*inveps)
 
-    function I_in pA = convolve(I_syn_in, spikesInh)
-    function I_ex pA = convolve(I_syn_ex, spikesExc)
+    inline I_in pA = convolve(I_syn_in, spikesInh)
+    inline I_ex pA = convolve(I_syn_ex, spikesExc)
 
     V_m' = (g_L*(E_L - V_m) + I_e + I_in + I_ex + currents) * invCm
 
@@ -84,7 +80,7 @@ neuron elif_psc_alpha_fast:
   input:
     spikesInh pA <- inhibitory spike
     spikesExc pA <- excitatory spike
-    currents pA <- current
+    currents pA <- continuous
   end
 
   output: spike
