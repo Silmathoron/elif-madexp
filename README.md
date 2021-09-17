@@ -17,9 +17,10 @@ Just install the BRIAN simulator via pip:
 
 ### NEST
 
-* Install NEST (see [here](https://nest-simulator.readthedocs.io/en/stable/installation/index.html))
-* Install NESTML using ``pip install nestml`` (this code requires NESTML >= 4)
-* Then run ``python nestml/nestml_install.py`` to install the models
+* Install NEST (see [here](https://nest-simulator.readthedocs.io/en/stable/installation/index.html#advanced-install))
+* Install NESTML using ``pip install nestml`` (this code requires NESTML >= 4).
+* Then run ``python nestml/nestml_install.py`` to install the models.
+* See the [FAQ](https://man.sr.ht/~tfardet/elif-madexp/FAQ.md) if you encouter any issue.
 
 ### NEURON
 

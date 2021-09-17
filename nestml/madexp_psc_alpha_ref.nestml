@@ -94,6 +94,7 @@ neuron madexp_psc_alpha_ref:
 
   internals:
     RefractoryCounts integer = steps(t_ref) # refractory time in steps
+    Vspike real = Delta_T == 0 ? min(V_th, V_peak) : V_peak
   end
 
   input:
@@ -115,7 +116,7 @@ neuron madexp_psc_alpha_ref:
     if r > 0: # is refractory?
       r -= 1
       V_m  = V_reset
-    elif V_m >= V_peak and epsilon > epsilon_c:
+    elif V_m >= Vspike and epsilon > epsilon_c:
       # this test is necessary to support Delta_T = 0
       V_m  = V_reset
       epsilon -= delta

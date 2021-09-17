@@ -1,17 +1,22 @@
-: Insert in a passive compartment to get an adaptive-exponential (Brette-Gerstner)
-: integrate-and-fire neuron with a refractory period.
-: This calculates the adaptive current, sets the membrane potential to the
-: correct value at the start and end of the refractory period, and prevents spikes
-: during the refractory period by clamping the membrane potential to the reset
-: voltage with a huge conductance.
+: Energy-based leaky integrate-and-fire neuron.
 :
-: Reference:
+: Description:
+: The dynamics are given by:
+:    C_m dV_m/dt   = g_L*(V-E_L) - w + I_e + I_syn_ex + I_syn_in
+:    tau_w dw/dt   = a(V-E_L) - epsilon/epsilon_0 w + I_KATP*epsilon_0/(epsilon_0 + epsilon)
+:    tau_e depsilon/dt = (1-epsilon/(alpha*epsilon_0))**3 - (V-E_f)/(E_d-E_f) - gamma*w
 :
-: Brette R and Gerstner W. Adaptive exponential integrate-and-fire
-:   model as an effective description of neuronal activity. 
-:   J. Neurophysiol. 94: 3637-3642, 2005.
-:  
-: Implemented by Andrew Davison. UNIC, CNRS, March 2009.
+:    E_L = E_0 + (E_u - E_0)(1-epsilon/epsilon_0)
+:
+:    if V_m >= V_th and epsilon > epsilon_c:
+:      V_m is set to V_reset
+:
+:    On each spike arrival, the membrane potential feels an alpha-shaped current
+:    of the form:
+:      I_syn = I_0 * t * exp(-t/tau_syn) / tau_syn.
+:
+: FirstVersion: 2019
+: Author: Tanguy Fardet
 
 NEURON {
     POINT_PROCESS mAdExp
@@ -116,6 +121,7 @@ FUNCTION exp_current(v, epsilon) {  : handle the case where Delta_T is 0 or very
 
 FUNCTION threshcrossing (v (mV), epsilon) {
     if ((v > V_spike) && (epsilon > epsilon_c)) {
+        : the epsilon check is necessary in case Delta_T == 0
         threshcrossing = 1
     }
     else {
@@ -130,7 +136,6 @@ NET_RECEIVE (weight) {
         epsilon = epsilon - delta
         net_send(spikewidth, 2)
         net_event(t)
-        :printf("spike: t = %f  v = %f   w = %f   i = %f\n", t, v, w, i)
     } else if (flag == 2) { : end of spike, beginning of refractory period
         v = V_reset
         grefrac = gon
@@ -139,11 +144,9 @@ NET_RECEIVE (weight) {
         } else { : also the end of the refractory period
             grefrac = 0
         }
-        :printf("refrac: t = %f  v = %f   w = %f   i = %f\n", t, v, w, i)
     } else if (flag == 3) { : end of refractory period
         v = V_reset
         grefrac = 0
-        :printf("end_refrac: t = %f  v = %f   w = %f   i = %f\n", t, v, w, i)
     } else if (flag == 4) { : watch membrane potential
         WATCH ( threshcrossing(v, epsilon) > 0 ) 1
     }

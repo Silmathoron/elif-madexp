@@ -33,23 +33,23 @@ neuron elif_psc_alpha_fast:
   end
 
   parameters:
-    C_m pF = 100. pF           # Membrane capacitance
-    g_L nS = 9. nS             # leak conductance
-    E_0 mV = -65. mV           # resting potential
-    E_u mV = -58. mV           # upper potential
-    E_d mV = -50. mV           # energy depletion potential
-    E_f mV = -60. mV           # energy inflexion potential
-    epsilon_0 real = 0.5           # standard resting energy level
-    epsilon_c real = 0.2           # standard resting energy level
-    alpha real = 1.            # energetic health
-    delta real = 0.1           # energy consumption per spike
-    tau_e ms = 1000. ms        # time constant for energy production
-    I_e pA = 0. pA             # Constant input current
-    V_th mV = -55. mV          # Spike detection threshold (reset condition)
-    V_reset mV = -62. mV       # Reset potential
-    tau_syn_ex ms = 0.2 ms     # Synaptic Time Constant Excitatory Synapse
-    tau_syn_in ms = 2.0 ms     # Synaptic Time Constant for Inhibitory Synapse
-    t_ref ms = 2.0 ms          # Refractory period
+    C_m pF = 100. pF        # Membrane capacitance
+    g_L nS = 9. nS          # leak conductance
+    E_0 mV = -65. mV        # resting potential
+    E_u mV = -58. mV        # upper potential
+    E_d mV = -50. mV        # energy depletion potential
+    E_f mV = -60. mV        # energy inflexion potential
+    epsilon_0 real = 0.5    # standard resting energy level
+    epsilon_c real = 0.2    # standard resting energy level
+    alpha real = 1.         # energetic health
+    delta real = 0.1        # energy consumption per spike
+    tau_e ms = 1000. ms     # time constant for energy production
+    I_e pA = 0. pA          # Constant input current
+    V_th mV = -55. mV       # Spike detection threshold (reset condition)
+    V_reset mV = -62. mV    # Reset potential
+    tau_syn_ex ms = 0.2 ms  # Synaptic Time Constant Excitatory Synapse
+    tau_syn_in ms = 2.0 ms  # Synaptic Time Constant for Inhibitory Synapse
+    t_ref ms = 2.0 ms       # Refractory period
   end
 
   internals:

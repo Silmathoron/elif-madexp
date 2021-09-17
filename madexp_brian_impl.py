@@ -36,7 +36,7 @@ dw/dt   = (a*(V_m-E_L) - w + I_KATP*epsilon_c/(epsilon_c + 2*epsilon)) / tau_w :
 depsilon/dt = ((1-epsilon/(alpha*epsilon_0))**3 - (V_m-E_f)/(E_d-E_f) - w/gamma) / tau_e : 1
 """
 
-neuron = NeuronGroup(N, model=eqs, threshold='V_m > Vcut and epsilon > epsilon_c',
+neuron = NeuronGroup(N, model=eqs, threshold='V_m > Vcut and epsilon > epsilon_c',  # the epsilon check is necessary in case Delta_T == 0
                      reset="V_m = V_reset; w += b; epsilon -= delta",
                      method='rk4')
 neuron.V_m  = -60*mV
